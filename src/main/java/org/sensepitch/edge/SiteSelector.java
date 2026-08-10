@@ -99,7 +99,7 @@ public class SiteSelector {
       ResponseConfig response = site.response();
       HttpResponseStatus status = HttpResponseStatus.valueOf(response.status());
       String location;
-      if (response.location() != null) {
+      if (response.isRedirect()) {
         location = response.location();
       } else {
         location = null;
