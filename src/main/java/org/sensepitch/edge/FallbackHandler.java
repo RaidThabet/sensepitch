@@ -112,25 +112,22 @@ public class FallbackHandler extends ChannelOutboundHandlerAdapter {
     boolean serviceUnavailable =
         source.status().code() == HttpResponseStatus.SERVICE_UNAVAILABLE.code();
     ResponseConfig cfg = serviceUnavailable ? unavailable : error;
-    Fallback.Redirect redirect = Fallback.resolvedRedirect(cfg.location(), cfg.status());
 
-    if (redirect != null) {
-      return buildRedirectFallback(source, redirect);
+    if (cfg.isRedirect()) {
+      return buildRedirectFallback(source, cfg.location(), cfg.status());
     }
     byte[] content = serviceUnavailable ? unavailableContent : errorContent;
     return buildPageFallback(ctx, source, cfg, content);
   }
 
-  private FullHttpResponse buildRedirectFallback(HttpResponse source, Fallback.Redirect redirect) {
+  private FullHttpResponse buildRedirectFallback(HttpResponse source, String location, int status) {
     FullHttpResponse redirectResponse =
         new DefaultFullHttpResponse(
-            source.protocolVersion(),
-            HttpResponseStatus.valueOf(redirect.status()),
-            Unpooled.EMPTY_BUFFER);
+            source.protocolVersion(), HttpResponseStatus.valueOf(status), Unpooled.EMPTY_BUFFER);
     if (source.headers().contains(HttpHeaderNames.CONNECTION)) {
       copyConnectionHeaderIfPresent(source, redirectResponse);
     }
-    setLocationAndLengthHeaders(redirectResponse, redirect.location());
+    setLocationAndLengthHeaders(redirectResponse, location);
     return redirectResponse;
   }
 
